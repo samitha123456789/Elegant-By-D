@@ -6,9 +6,10 @@ export default async function FeaturedProducts() {
   let products;
   try {
     products = await getProducts({ featured: true });
+    if (!Array.isArray(products)) throw new Error("Invalid products data");
   } catch (error) {
     console.error("Failed to fetch featured products:", error);
-    products = [];
+    products = []; // Fallback to empty array
   }
 
   return (

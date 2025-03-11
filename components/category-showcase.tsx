@@ -16,6 +16,7 @@ export default async function CategoryShowcase() {
     categoryCounts = await Promise.all(
       categories.map(async (category) => {
         const products = await getProducts({ category: category.name });
+        if (!Array.isArray(products)) throw new Error(`Invalid data for ${category.name}`);
         return { ...category, productCount: products.length };
       })
     );

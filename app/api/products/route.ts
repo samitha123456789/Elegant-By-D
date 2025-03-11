@@ -9,6 +9,7 @@ const uploadDir = path.join(process.cwd(), "public/uploads");
 
 export async function GET(request: NextRequest) {
   try {
+    // Attempt to connect to the database
     await dbConnect();
     const { searchParams } = new URL(request.url);
 
@@ -36,8 +37,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: true, data: products });
   } catch (error) {
     console.error("GET /api/products error:", error);
+    // Always return JSON, even if DB connection fails
     return NextResponse.json(
-      { success: false, error: (error as Error).message },
+      { success: false, error: (error as Error).message || "Internal Server Error", data: [] },
       { status: 500 }
     );
   }
@@ -83,7 +85,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("POST /api/products error:", error);
     return NextResponse.json(
-      { success: false, error: (error as Error).message },
+      { success: false, error: (error as Error).message || "Internal Server Error" },
       { status: 400 }
     );
   }
@@ -132,7 +134,7 @@ export async function PUT(request: NextRequest) {
   } catch (error) {
     console.error("PUT /api/products error:", error);
     return NextResponse.json(
-      { success: false, error: (error as Error).message },
+      { success: false, error: (error as Error).message || "Internal Server Error" },
       { status: 400 }
     );
   }
@@ -152,7 +154,7 @@ export async function DELETE(request: NextRequest) {
   } catch (error) {
     console.error("DELETE /api/products error:", error);
     return NextResponse.json(
-      { success: false, error: (error as Error).message },
+      { success: false, error: (error as Error).message || "Internal Server Error" },
       { status: 400 }
     );
   }

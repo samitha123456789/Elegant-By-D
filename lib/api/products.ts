@@ -39,25 +39,46 @@ export async function getProducts(options: GetProductsOptions = {}) {
 
   const url = `${getBaseUrl()}/api/products?${queryParams.toString()}`;
   console.log("Fetching products from:", url); // Debug log
-  const res = await fetch(url); // Remove cache: "no-store" for static builds
-  if (!res.ok) {
-    console.log("Fetch response:", res.status, res.statusText);
-    throw new Error(`Failed to fetch products: ${res.status} ${res.statusText}`);
-  }
 
-  const { data } = await res.json();
-  return data as Product[];
+  try {
+    const res = await fetch(url, {
+      cache: "force-cache", // Optimize for static generation
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (!res.ok) {
+      console.error(`Fetch failed: ${res.status} ${res.statusText}`);
+      const text = await res.text(); // Log raw response for debugging
+      console.error("Response body:", text.slice(0, 100)); // Limit for readability
+      throw new Error(`Failed to fetch products: ${res.status} ${res.statusText}`);
+    }
+
+    const data = await res.json();
+    if (!data.success || !Array.isArray(data.data)) {
+      console.error("Invalid API response:", data);
+      return []; // Fallback to empty array
+    }
+
+    return data.data as Product[];
+  } catch (error) {
+    console.error(`Error fetching products from ${url}:`, error);
+    return []; // Fallback to empty array during build
+  }
 }
 
 export async function getProductById(id: string) {
   const url = `${getBaseUrl()}/api/products/${id}`;
-  const res = await fetch(url, { cache: "no-store" });
-  if (!res.ok) {
-    throw new Error(`Product with ID ${id} not found: ${res.status} ${res.statusText}`);
+  try {
+    const res = await fetch(url, { cache: "force-cache" });
+    if (!res.ok) {
+      throw new Error(`Product with ID ${id} not found: ${res.status} ${res.statusText}`);
+    }
+    const { data } = await res.json();
+    return data as Product;
+  } catch (error) {
+    console.error(`Error fetching product ${id}:`, error);
+    throw error; // Let caller handle this
   }
-
-  const { data } = await res.json();
-  return data as Product;
 }
 
 export async function createProduct(

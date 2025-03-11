@@ -1,4 +1,4 @@
-// app/login/page.tsx
+// ecommerce-platform/app/login/page.tsx
 "use client";
 
 import { useState } from "react";
@@ -8,8 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
+import { Suspense } from "react";
 
-export default function LoginPage() {
+function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -28,7 +29,7 @@ export default function LoginPage() {
     if (res?.error) {
       setError("Invalid email or password");
     } else {
-      router.push(callbackUrl); // Redirects to /admin or /checkout based on origin
+      router.push(callbackUrl);
     }
   };
 
@@ -92,5 +93,19 @@ export default function LoginPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <p>Loading login...</p>
+        </div>
+      }
+    >
+      <LoginForm />
+    </Suspense>
   );
 }
