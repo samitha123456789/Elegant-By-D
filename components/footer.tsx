@@ -21,8 +21,8 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/categories" className="text-muted-foreground transition-colors hover:text-foreground">
-                  Categories
+                <Link href="/about" className="text-muted-foreground transition-colors hover:text-foreground">
+                  About Us
                 </Link>
               </li>
               <li>
@@ -39,18 +39,18 @@ export default function Footer() {
             <h3 className="mb-4 text-lg font-medium">Account</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/account" className="text-muted-foreground transition-colors hover:text-foreground">
+                <Link href="/profile" className="text-muted-foreground transition-colors hover:text-foreground">
                   My Account
                 </Link>
               </li>
               <li>
-                <Link href="/account/orders" className="text-muted-foreground transition-colors hover:text-foreground">
+                <Link href="/profile" className="text-muted-foreground transition-colors hover:text-foreground">
                   Order History
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/account/tracking"
+                  href="/profile"
                   className="text-muted-foreground transition-colors hover:text-foreground"
                 >
                   Track Order

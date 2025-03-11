@@ -1,20 +1,27 @@
-import ProductCard from "@/components/product-card"
-import { getProducts } from "@/lib/api/products"
+// components/product-list.tsx
+import ProductCard from "@/components/product-card";
+import { getProducts } from "@/lib/api/products";
 
 export default async function ProductList({
   category,
   sale,
   search,
 }: {
-  category?: string
-  sale?: boolean
-  search?: string
+  category?: string;
+  sale?: boolean;
+  search?: string;
 }) {
-  const products = await getProducts({
-    category,
-    sale,
-    search,
-  })
+  let products;
+  try {
+    products = await getProducts({
+      category,
+      sale,
+      search,
+    });
+  } catch (error) {
+    console.error("ProductList fetch error:", error);
+    products = [];
+  }
 
   if (products.length === 0) {
     return (
@@ -24,7 +31,7 @@ export default async function ProductList({
           <p className="text-muted-foreground">Try adjusting your filters or search term.</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -33,6 +40,5 @@ export default async function ProductList({
         <ProductCard key={product._id} product={product} />
       ))}
     </div>
-  )
+  );
 }
-

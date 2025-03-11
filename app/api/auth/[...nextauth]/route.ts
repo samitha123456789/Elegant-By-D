@@ -1,10 +1,11 @@
-import NextAuth from "next-auth";
+// app/api/auth/[...nextauth]/route.ts
+import NextAuth, { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import dbConnect from "@/lib/db/mongoose";
 import User from "@/lib/db/models/user";
 import bcrypt from "bcryptjs";
 
-export const authOptions = {
+export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -18,7 +19,7 @@ export const authOptions = {
         if (!user || !bcrypt.compareSync(credentials?.password || "", user.password)) {
           throw new Error("Invalid email or password");
         }
-        return { id: user._id, name: user.name, email: user.email, role: user.role };
+        return { id: user._id.toString(), name: user.name, email: user.email, role: user.role };
       },
     }),
   ],
@@ -30,16 +31,17 @@ export const authOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.role = user.role;
+        token.role = user.role as "customer" | "admin";
       }
       return token;
     },
     async session({ session, token }) {
-      session.user.id = token.id;
-      session.user.role = token.role;
+      session.user.id = token.id as string;
+      session.user.role = token.role as "customer" | "admin";
       return session;
     },
   },
+  secret: process.env.NEXTAUTH_SECRET, // Required, no fallback
 };
 
 const handler = NextAuth(authOptions);

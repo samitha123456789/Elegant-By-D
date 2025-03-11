@@ -1,8 +1,9 @@
+// app/login/page.tsx
 "use client";
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,6 +14,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") || "/checkout";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,11 +23,12 @@ export default function LoginPage() {
       email,
       password,
       redirect: false,
+      callbackUrl,
     });
     if (res?.error) {
       setError("Invalid email or password");
     } else {
-      router.push("/checkout");
+      router.push(callbackUrl); // Redirects to /admin or /checkout based on origin
     }
   };
 

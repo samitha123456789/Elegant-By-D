@@ -50,12 +50,12 @@ export default function Header() {
             Products
           </Link>
           <Link
-            href="/categories"
+            href="/about"
             className={`text-sm font-medium transition-colors ${
               pathname === "/categories" ? "text-primary" : "text-foreground/60"
             } hover:text-primary`}
           >
-            Categories
+            About Us
           </Link>
         </nav>
         <div className="flex items-center space-x-4">

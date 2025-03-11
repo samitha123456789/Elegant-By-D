@@ -5,13 +5,14 @@ import { useState, useEffect } from "react";
 import { BarChart3, DollarSign, ShoppingBag, Users } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import RecentOrdersTable from "@/components/admin/recent-orders-table";
-import AdminOrderDetails from "@/components/admin-order-details";
+import AdminOrderDetails from "@/components/admin-order-details"; // Fixed import path
 import Notification from "@/components/notification";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { getProducts, createProduct, updateProduct, deleteProduct } from "@/lib/api/products";
 import { getDiscountBanner, updateDiscountBanner } from "@/lib/api/discountBanner";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { getBaseUrl } from "@/lib/utils";
 
 const categories = ["Clothing", "Electronics", "Accessories", "Footwear"];
@@ -31,6 +32,7 @@ export default function AdminDashboard() {
     isActive: false,
   });
   const [customers, setCustomers] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
   const [notification, setNotification] = useState<string | null>(null);
@@ -56,6 +58,7 @@ export default function AdminDashboard() {
     fetchProducts();
     fetchBanner();
     fetchCustomers();
+    fetchUsers();
     fetchRecentOrders();
     const interval = setInterval(checkNewOrders, 5000);
     return () => clearInterval(interval);
@@ -90,9 +93,19 @@ export default function AdminDashboard() {
     try {
       const res = await fetch(`${getBaseUrl()}/api/users`);
       const { data } = await res.json();
-      setCustomers(data);
+      setCustomers(data.filter((u: any) => u.role === "customer"));
     } catch (error) {
       toast({ title: "Error", description: "Failed to fetch customers", variant: "destructive" });
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const res = await fetch(`${getBaseUrl()}/api/users`);
+      const { data } = await res.json();
+      setUsers(data);
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to fetch users", variant: "destructive" });
     }
   };
 
@@ -131,7 +144,7 @@ export default function AdminDashboard() {
         category: formData.category,
         discount: formData.discount,
         featured: formData.featured,
-        stock: formData.stock,
+        stock: formData.stock, // Fixed previously
         sizes: formData.sizes.filter((s) => s.stock > 0),
       };
 
@@ -189,6 +202,46 @@ export default function AdminDashboard() {
       toast({ title: "Success", description: "Banner updated successfully!" });
     } catch (error) {
       setBannerMessage(`Error: ${(error as Error).message}`);
+      toast({ title: "Error", description: (error as Error).message, variant: "destructive" });
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent<HTMLFormElement>, userId: string) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const newPassword = formData.get("newPassword") as string;
+
+    try {
+      const res = await fetch(`${getBaseUrl()}/api/users/reset-password`, {
+        method: "PUT", // Changed to PUT to match typical REST conventions
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, newPassword }),
+      });
+      if (!res.ok) throw new Error((await res.json()).error || "Failed to reset password");
+      toast({ title: "Success", description: "Password reset successfully!" });
+      fetchUsers();
+    } catch (error) {
+      toast({ title: "Error", description: (error as Error).message, variant: "destructive" });
+    }
+  };
+
+  const handleAddAdmin = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+    const name = email.split("@")[0];
+
+    try {
+      const res = await fetch(`${getBaseUrl()}/api/users/add-admin`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, name }),
+      });
+      if (!res.ok) throw new Error((await res.json()).error || "Failed to add admin");
+      toast({ title: "Success", description: "Admin added successfully!" });
+      fetchUsers();
+    } catch (error) {
       toast({ title: "Error", description: (error as Error).message, variant: "destructive" });
     }
   };
@@ -295,6 +348,7 @@ export default function AdminDashboard() {
           <TabsTrigger value="products">Products</TabsTrigger>
           <TabsTrigger value="discount-banner">Discount Banner</TabsTrigger>
           <TabsTrigger value="customers">Customers</TabsTrigger>
+          <TabsTrigger value="users">Users</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
         </TabsList>
         <TabsContent value="overview" className="space-y-4">
@@ -649,6 +703,45 @@ export default function AdminDashboard() {
                   ))}
                 </div>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="users" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>User Management</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <h3 className="mb-4 text-lg font-semibold">Reset Password</h3>
+              {users.length === 0 ? (
+                <p>No users found.</p>
+              ) : (
+                <div className="space-y-4">
+                  {users.map((user) => (
+                    <form
+                      key={user._id}
+                      onSubmit={(e) => handleResetPassword(e, user._id)}
+                      className="flex items-center gap-4"
+                    >
+                      <span className="w-48">{user.email} ({user.role})</span>
+                      <Input
+                        name="newPassword"
+                        type="password"
+                        placeholder="New Password"
+                        required
+                        className="w-64"
+                      />
+                      <Button type="submit">Reset</Button>
+                    </form>
+                  ))}
+                </div>
+              )}
+              <h3 className="mt-6 mb-4 text-lg font-semibold">Add New Admin</h3>
+              <form onSubmit={handleAddAdmin} className="flex gap-4">
+                <Input name="email" type="email" placeholder="Email" required className="w-64" />
+                <Input name="password" type="password" placeholder="Password" required className="w-64" />
+                <Button type="submit">Add Admin</Button>
+              </form>
             </CardContent>
           </Card>
         </TabsContent>
